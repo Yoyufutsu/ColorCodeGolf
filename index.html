@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>背景色比較（補色 & 回数）</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      height: 100%;
+    }
+
+    .left, .right {
+      flex: 1;
+      transition: background-color 0.3s ease;
+    }
+
+    .right {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      margin: 5px;
+    }
+
+    #diffDisplay {
+      margin-top: 10px;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="left" id="leftPane"></div>
+    <div class="right" id="rightPane">
+      <label for="colorInput">カラーコードを入力（例: #ff0000）:</label>
+      <input type="text" id="colorInput" placeholder="#ffffff">
+      <button id="applyBtn">適用</button>
+      <div id="diffDisplay"></div>
+    </div>
+  </div>
+
+  <script>
+    function getRandomColor() {
+      const letters = "0123456789ABCDEF";
+      let color = "#";
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function hexToRgb(hex) {
+      hex = hex.replace("#", "");
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return [r, g, b];
+    }
+
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(x => {
+        const hex = x.toString(16);
+        return hex.length === 1 ? "0" + hex : hex;
+      }).join("");
+    }
+
+    const leftPane = document.getElementById("leftPane");
+    const rightPane = document.getElementById("rightPane");
+    const colorInput = document.getElementById("colorInput");
+    const applyBtn = document.getElementById("applyBtn");
+    const diffDisplay = document.getElementById("diffDisplay");
+
+    const leftColor = getRandomColor();
+    leftPane.style.backgroundColor = leftColor;
+
+    let applyCount = 0;
+
+    function applyColor() {
+      const inputColor = colorInput.value;
+      const validHex = /^#([0-9A-Fa-f]{6})$/;
+
+      if (validHex.test(inputColor)) {
+        rightPane.style.backgroundColor = inputColor;
+        applyCount++;
+
+        const [lr, lg, lb] = hexToRgb(leftColor);
+        const [rr, rg, rb] = hexToRgb(inputColor);
+
+        const diffSum = Math.abs(lr - rr) + Math.abs(lg - rg) + Math.abs(lb - rb);
+
+        if (diffSum < 0x1E) {
+          const compColor = rgbToHex(255 - rr, 255 - rg, 255 - rb);
+          diffDisplay.style.color = compColor;
+          diffDisplay.innerHTML = `
+            差の合計（絶対値）: ${diffSum}<br>
+            適用回数: ${applyCount}
+          `;
+        } else {
+          diffDisplay.textContent = "";
+        }
+      }
+    }
+
+    applyBtn.addEventListener("click", applyColor);
+    colorInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        applyColor();
+      }
+    });
+  </script>
+</body>
+</html>
